@@ -1,0 +1,273 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Search, Plus, ExternalLink, Trash2, Loader2 } from 'lucide-react';
+import { LinkItem, Category } from '@/lib/types';
+
+export default function Home() {
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [filteredLinks, setFilteredLinks] = useState<LinkItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    filterLinks();
+  }, [links, selectedCategory, searchQuery]);
+
+  const fetchData = async () => {
+    try {
+      const [linksRes, categoriesRes] = await Promise.all([
+        fetch('/api/links'),
+        fetch('/api/categories'),
+      ]);
+      const linksData = await linksRes.json();
+      const categoriesData = await categoriesRes.json();
+      setLinks(linksData);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterLinks = () => {
+    let filtered = links;
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(link => link.category === selectedCategory);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        link =>
+          link.title.toLowerCase().includes(query) ||
+          link.description.toLowerCase().includes(query) ||
+          link.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+
+    setFilteredLinks(filtered);
+  };
+
+  const deleteLink = async (id: string) => {
+    if (!confirm('确定要删除这个链接吗？')) return;
+
+    try {
+      await fetch(`/api/links/${id}`, { method: 'DELETE' });
+      setLinks(links.filter(link => link.id !== id));
+    } catch (error) {
+      console.error('Error deleting link:', error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Header - 简化版 */}
+      <header className="glass sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-white">跨境工具导航</h1>
+                <p className="text-gray-400 text-sm mt-0.5">分享最实用的跨境工具和资源</p>
+              </div>
+            </div>
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:shadow-blue-500/25"
+            >
+              <Plus size={18} />
+              <span>添加链接</span>
+            </Link>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mt-4 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="搜索工具、标签..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 focus:bg-white/10 transition-all"
+            />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content - 左右侧栏布局 */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex gap-6">
+          {/* 左侧分类边栏 */}
+          <aside className="flex-shrink-0 w-56">
+            <div className="glass-card rounded-2xl p-4 sticky top-36">
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">分类</h2>
+              <nav className="space-y-1">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
+                    selectedCategory === 'all'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className="text-lg">🏠</span>
+                  <span className="font-medium">全部</span>
+                  {links.length > 0 && (
+                    <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{links.length}</span>
+                  )}
+                </button>
+                {categories.map(cat => {
+                  const count = links.filter(link => link.category === cat.id).length;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
+                        selectedCategory === cat.id
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-lg">{cat.icon}</span>
+                      <span className="font-medium text-sm">{cat.name}</span>
+                      {count > 0 && (
+                        <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{count}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </aside>
+
+          {/* 右侧内容区域 */}
+          <main className="flex-1 min-w-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="animate-spin text-blue-500" size={40} />
+              </div>
+            ) : filteredLinks.length === 0 ? (
+              <div className="text-center py-20 text-gray-400 glass-card rounded-2xl">
+                <p className="text-lg">暂无链接</p>
+                <p className="text-sm mt-2">点击右上角「添加链接」开始添加吧！</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {filteredLinks.map(link => (
+                  <LinkCard key={link.id} link={link} onDelete={deleteLink} categories={categories} />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-6 text-center text-gray-400 text-sm">
+        <p>Cross-Border Tools Navigator © 2024</p>
+      </footer>
+    </div>
+  );
+}
+
+function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (id: string) => void; categories: Category[] }) {
+  const category = categories.find(c => c.id === link.category);
+  const [thumbUrl, setThumbUrl] = useState<string>(link.image || link.icon);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setThumbUrl(link.image || link.icon);
+    setImageError(false);
+  }, [link.image, link.icon]);
+
+  const hasThumbnail = link.image && !imageError;
+
+  return (
+    <div className="glass-card rounded-xl overflow-hidden group hover:scale-[1.02] transition-transform duration-200">
+      {/* 横向布局 */}
+      <div className="flex">
+        {/* 左侧缩略图区域 */}
+        <div className="flex-shrink-0 w-28 h-28 bg-gray-900/50 relative overflow-hidden">
+          {hasThumbnail ? (
+            <img
+              src={thumbUrl}
+              alt={link.title}
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : link.icon && !imageError ? (
+            <div className="w-full h-full flex items-center justify-center p-3">
+              <img
+                src={link.icon}
+                alt={link.title}
+                className="w-full h-full object-contain"
+                onError={() => setImageError(true)}
+              />
+            </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-3xl bg-white/5">
+              {category?.icon || '🔗'}
+            </div>
+          )}
+        </div>
+
+        {/* 右侧内容区域 */}
+        <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+          <div className="min-w-0">
+            {/* 标题 */}
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-white font-medium hover:text-blue-400 transition-colors"
+            >
+              <span className="truncate text-sm">{link.title}</span>
+              <ExternalLink size={12} className="flex-shrink-0 opacity-0 group-hover:opacity-100" />
+            </a>
+
+            {/* 描述 */}
+            <p className="text-gray-400 text-xs mt-1.5 line-clamp-2">{link.description || '暂无描述'}</p>
+          </div>
+
+          {/* 底部：标签和删除按钮 */}
+          <div className="flex items-center justify-between mt-2">
+            {/* 标签 */}
+            {link.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {link.tags.slice(0, 2).map((tag, index) => (
+                  <span
+                    key={index}
+                    className="text-xs bg-white/5 text-gray-300 px-2 py-0.5 rounded border border-white/10"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {link.tags.length > 2 && (
+                  <span className="text-xs text-gray-500 px-1">+{link.tags.length - 2}</span>
+                )}
+              </div>
+            )}
+
+            {/* 删除按钮 */}
+            <button
+              onClick={() => onDelete(link.id)}
+              className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
