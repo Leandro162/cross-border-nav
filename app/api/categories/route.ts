@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllCategories, addCategory } from '@/lib/storage';
+import { getAllCategories, addCategory } from '@/lib/db';
 
 // GET /api/categories - 获取所有分类
 export async function GET() {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateLink, deleteLink, getAllLinks } from '@/lib/storage';
+import { updateLink, deleteLink } from '@/lib/db';
 
 // PUT /api/links/[id] - 更新链接
 export async function PUT(

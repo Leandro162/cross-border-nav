@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllLinks, addLink } from '@/lib/storage';
+import { getAllLinks, addLink } from '@/lib/db';
 
 // GET /api/links - 获取所有链接
 export async function GET(request: NextRequest) {

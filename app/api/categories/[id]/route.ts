@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateCategory, deleteCategory } from '@/lib/storage';
+import { updateCategory, deleteCategory } from '@/lib/db';
 
 // PUT /api/categories/[id] - 更新分类
 export async function PUT(
