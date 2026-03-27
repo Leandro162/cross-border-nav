@@ -97,25 +97,25 @@ export default function CategoriesPage() {
   const commonEmojis = ['🌐', '🔧', '📢', '💳', '💰', '📦', '🛒', '🚀', '⚡', '🎯', '📊', '🔍', '🌟', '💡', '🔔', '📱', '💼', '🏪', '🎨', '📈'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
+      <header className="border-b border-slate-200 bg-white/70 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/admin"
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors inline-flex"
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors inline-flex"
             >
               <ArrowLeft size={20} />
               <span>返回添加链接</span>
             </Link>
-            <h1 className="text-2xl font-bold text-white">分类管理</h1>
+            <h1 className="text-2xl font-bold text-slate-800">分类管理</h1>
             <button
               onClick={() => {
                 resetForm();
                 setShowAddForm(true);
               }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <Plus size={18} />
               <span>添加分类</span>
@@ -128,34 +128,34 @@ export default function CategoriesPage() {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Message */}
         {message && (
-          <div className={`mb-6 p-4 rounded-lg ${message.includes('成功') ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+          <div className={`mb-6 p-4 rounded-lg ${message.includes('成功') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {message}
           </div>
         )}
 
         {/* Add/Edit Form */}
         {(showAddForm || editingId) && (
-          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-6">
-            <h2 className="text-xl font-bold text-white mb-4">
+          <div className="glass-card rounded-xl p-6 mb-6">
+            <h2 className="text-xl font-bold text-slate-800 mb-4">
               {editingId ? '编辑分类' : '添加新分类'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-white font-medium mb-2">
-                  分类名称 <span className="text-red-400">*</span>
+                <label className="block text-slate-700 font-medium mb-2">
+                  分类名称 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="例如：跨境电商"
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">
-                  分类图标 <span className="text-red-400">*</span>
+                <label className="block text-slate-700 font-medium mb-2">
+                  分类图标 <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -163,9 +163,9 @@ export default function CategoriesPage() {
                     value={formData.icon}
                     onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                     placeholder="选择或输入 emoji"
-                    className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
-                  <div className="flex items-center bg-gray-700 border border-gray-600 rounded-lg px-4 text-2xl">
+                  <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg px-4 text-2xl">
                     {formData.icon || '🔖'}
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function CategoriesPage() {
                       key={emoji}
                       type="button"
                       onClick={() => setFormData({ ...formData, icon: emoji })}
-                      className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-lg text-xl flex items-center justify-center transition-colors"
+                      className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-lg text-xl flex items-center justify-center transition-colors"
                     >
                       {emoji}
                     </button>
@@ -185,13 +185,13 @@ export default function CategoriesPage() {
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">分类描述</label>
+                <label className="block text-slate-700 font-medium mb-2">分类描述</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="简要描述这个分类的内容"
                   rows={3}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
                 />
               </div>
 
@@ -199,7 +199,7 @@ export default function CategoriesPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>
@@ -216,7 +216,7 @@ export default function CategoriesPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                  className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <X size={20} />
                   <span>取消</span>
@@ -232,7 +232,7 @@ export default function CategoriesPage() {
             <Loader2 className="animate-spin text-blue-500" size={40} />
           </div>
         ) : categories.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 bg-gray-800/50 border border-gray-700 rounded-xl">
+          <div className="text-center py-20 text-slate-400 glass-card rounded-xl">
             <p>暂无分类，点击右上角添加第一个分类吧！</p>
           </div>
         ) : (
@@ -240,28 +240,28 @@ export default function CategoriesPage() {
             {categories.map((category) => (
               <div
                 key={category.id}
-                className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-gray-600 transition-all group"
+                className="glass-card rounded-xl p-5 hover:border-slate-300 transition-all group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gray-700 rounded-lg flex items-center justify-center text-3xl">
+                    <div className="w-14 h-14 bg-slate-100 rounded-lg flex items-center justify-center text-3xl">
                       {category.icon}
                     </div>
                     <div>
-                      <h3 className="text-white font-medium text-lg">{category.name}</h3>
-                      <p className="text-gray-400 text-sm mt-1">{category.description || '暂无描述'}</p>
+                      <h3 className="text-slate-800 font-medium text-lg">{category.name}</h3>
+                      <p className="text-slate-500 text-sm mt-1">{category.description || '暂无描述'}</p>
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEdit(category)}
-                      className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(category.id)}
-                      className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <Trash2 size={18} />
                     </button>

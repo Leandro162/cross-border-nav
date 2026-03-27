@@ -70,15 +70,15 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header - 简化版 */}
       <header className="glass sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">跨境工具导航</h1>
-                <p className="text-gray-400 text-sm mt-0.5">分享最实用的跨境工具和资源</p>
+                <h1 className="text-2xl font-bold text-slate-800">跨境工具导航</h1>
+                <p className="text-slate-500 text-sm mt-0.5">分享最实用的跨境工具和资源</p>
               </div>
             </div>
             <Link
@@ -92,13 +92,13 @@ export default function Home() {
 
           {/* Search Bar */}
           <div className="mt-4 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
               placeholder="搜索工具、标签..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 focus:bg-white/10 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 focus:bg-white transition-all"
             />
           </div>
         </div>
@@ -110,20 +110,20 @@ export default function Home() {
           {/* 左侧分类边栏 */}
           <aside className="flex-shrink-0 w-56">
             <div className="glass-card rounded-2xl p-4 sticky top-36">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">分类</h2>
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">分类</h2>
               <nav className="space-y-1">
                 <button
                   onClick={() => setSelectedCategory('all')}
                   className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
                     selectedCategory === 'all'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                   }`}
                 >
                   <span className="text-lg">🏠</span>
                   <span className="font-medium">全部</span>
                   {links.length > 0 && (
-                    <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{links.length}</span>
+                    <span className="ml-auto text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{links.length}</span>
                   )}
                 </button>
                 {categories.map(cat => {
@@ -134,14 +134,14 @@ export default function Home() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
                         selectedCategory === cat.id
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                       }`}
                     >
                       <span className="text-lg">{cat.icon}</span>
                       <span className="font-medium text-sm">{cat.name}</span>
                       {count > 0 && (
-                        <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-full">{count}</span>
+                        <span className="ml-auto text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{count}</span>
                       )}
                     </button>
                   );
@@ -157,7 +157,7 @@ export default function Home() {
                 <Loader2 className="animate-spin text-blue-500" size={40} />
               </div>
             ) : filteredLinks.length === 0 ? (
-              <div className="text-center py-20 text-gray-400 glass-card rounded-2xl">
+              <div className="text-center py-20 text-slate-400 glass-card rounded-2xl">
                 <p className="text-lg">暂无链接</p>
                 <p className="text-sm mt-2">点击右上角「添加链接」开始添加吧！</p>
               </div>
@@ -173,7 +173,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-6 text-center text-gray-400 text-sm">
+      <footer className="border-t border-slate-200 py-6 text-center text-slate-500 text-sm">
         <p>Cross-Border Tools Navigator © 2024</p>
       </footer>
     </div>
@@ -197,7 +197,7 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
       {/* 横向布局 */}
       <div className="flex">
         {/* 左侧缩略图区域 */}
-        <div className="flex-shrink-0 w-28 h-28 bg-gray-900/50 relative overflow-hidden">
+        <div className="flex-shrink-0 w-28 h-28 bg-slate-100 relative overflow-hidden">
           {hasThumbnail ? (
             <img
               src={thumbUrl}
@@ -215,7 +215,7 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
               />
             </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl bg-white/5">
+            <div className="w-full h-full flex items-center justify-center text-3xl bg-slate-100">
               {category?.icon || '🔗'}
             </div>
           )}
@@ -229,14 +229,14 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-white font-medium hover:text-blue-400 transition-colors"
+              className="flex items-center gap-1.5 text-slate-800 font-medium hover:text-blue-600 transition-colors"
             >
               <span className="truncate text-sm">{link.title}</span>
               <ExternalLink size={12} className="flex-shrink-0 opacity-0 group-hover:opacity-100" />
             </a>
 
             {/* 描述 */}
-            <p className="text-gray-400 text-xs mt-1.5 line-clamp-2">{link.description || '暂无描述'}</p>
+            <p className="text-slate-500 text-xs mt-1.5 line-clamp-2">{link.description || '暂无描述'}</p>
           </div>
 
           {/* 底部：标签和删除按钮 */}
@@ -247,13 +247,13 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
                 {link.tags.slice(0, 2).map((tag, index) => (
                   <span
                     key={index}
-                    className="text-xs bg-white/5 text-gray-300 px-2 py-0.5 rounded border border-white/10"
+                    className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200"
                   >
                     {tag}
                   </span>
                 ))}
                 {link.tags.length > 2 && (
-                  <span className="text-xs text-gray-500 px-1">+{link.tags.length - 2}</span>
+                  <span className="text-xs text-slate-400 px-1">+{link.tags.length - 2}</span>
                 )}
               </div>
             )}
@@ -261,7 +261,7 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
             {/* 删除按钮 */}
             <button
               onClick={() => onDelete(link.id)}
-              className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
             >
               <Trash2 size={14} />
             </button>
