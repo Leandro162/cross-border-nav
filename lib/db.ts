@@ -1,6 +1,14 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { LinkItem, Category } from './types';
 
+// 辅助函数：获取 supabase 客户端（带类型安全）
+function getSupabase() {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+  return supabase;
+}
+
 // ==================== 分类管理 ====================
 
 // 默认分类数据
@@ -17,12 +25,12 @@ const DEFAULT_CATEGORIES: Category[] = [
 export async function initDefaultCategories() {
   if (!isSupabaseConfigured()) return;
 
-  const { data: existing } = await supabase
+  const { data: existing } = await getSupabase()
     .from('categories')
     .select('id');
 
   if (!existing || existing.length === 0) {
-    await supabase.from('categories').insert(DEFAULT_CATEGORIES);
+    await getSupabase().from('categories').insert(DEFAULT_CATEGORIES);
   }
 }
 
@@ -32,7 +40,7 @@ export async function getAllCategories(): Promise<Category[]> {
     return DEFAULT_CATEGORIES;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('categories')
     .select('*')
     .order('sort_order', { ascending: true });
@@ -55,7 +63,7 @@ export async function getCategoryById(id: string): Promise<Category | null> {
     return DEFAULT_CATEGORIES.find(c => c.id === id) || null;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('categories')
     .select('*')
     .eq('id', id)
@@ -79,7 +87,7 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
   }
 
   // 获取当前最大的 sort_order
-  const { data: existing } = await supabase
+  const { data: existing } = await getSupabase()
     .from('categories')
     .select('sort_order')
     .order('sort_order', { ascending: false })
@@ -89,7 +97,7 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
 
   const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('categories')
     .insert({
       id,
@@ -124,7 +132,7 @@ export async function updateCategory(id: string, updates: Partial<Omit<Category,
   if (updates.description !== undefined) updateData.description = updates.description;
   if (updates.sortOrder !== undefined) updateData.sort_order = updates.sortOrder;
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('categories')
     .update(updateData)
     .eq('id', id)
@@ -149,7 +157,7 @@ export async function deleteCategory(id: string): Promise<boolean> {
   }
 
   // 检查是否有链接使用此分类
-  const { data: links } = await supabase
+  const { data: links } = await getSupabase()
     .from('links')
     .select('id')
     .eq('category', id);
@@ -158,7 +166,7 @@ export async function deleteCategory(id: string): Promise<boolean> {
     throw new Error('该分类下还有链接，无法删除');
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('categories')
     .delete()
     .eq('id', id);
@@ -198,7 +206,7 @@ export async function getAllLinks(): Promise<LinkItem[]> {
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('links')
     .select('*')
     .order('created_at', { ascending: false });
@@ -226,7 +234,7 @@ export async function getLinksByCategory(category: string): Promise<LinkItem[]> 
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('links')
     .select('*')
     .eq('category', category)
@@ -257,7 +265,7 @@ export async function addLink(link: Omit<LinkItem, 'id' | 'createdAt' | 'updated
   const id = Date.now().toString();
   const now = new Date().toISOString();
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('links')
     .insert({
       id,
@@ -308,7 +316,7 @@ export async function updateLink(id: string, updates: Partial<LinkItem>): Promis
   if (updates.category !== undefined) updateData.category = updates.category;
   if (updates.tags !== undefined) updateData.tags = updates.tags;
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('links')
     .update(updateData)
     .eq('id', id)
@@ -337,7 +345,7 @@ export async function deleteLink(id: string): Promise<boolean> {
     throw new Error('Supabase not configured');
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('links')
     .delete()
     .eq('id', id);
