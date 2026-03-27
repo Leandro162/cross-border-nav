@@ -5,12 +5,12 @@ import { LinkItem, Category } from './types';
 
 // 默认分类数据
 const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'browser', name: '浏览器', icon: '🌐', description: '跨境专用浏览器工具' },
-  { id: 'tools', name: '跨境工具', icon: '🔧', description: '实用跨境运营工具' },
-  { id: 'ad-network', name: '广告联盟', icon: '📢', description: '国际广告联盟平台' },
-  { id: 'payment', name: '支付工具', icon: '💳', description: '跨境支付解决方案' },
-  { id: 'payment-channel', name: '支付通道', icon: '💰', description: '国际支付通道' },
-  { id: 'other', name: '其他资源', icon: '📦', description: '其他跨境相关资源' },
+  { id: 'browser', name: '浏览器', icon: '🌐', description: '跨境专用浏览器工具', sortOrder: 0 },
+  { id: 'tools', name: '跨境工具', icon: '🔧', description: '实用跨境运营工具', sortOrder: 1 },
+  { id: 'ad-network', name: '广告联盟', icon: '📢', description: '国际广告联盟平台', sortOrder: 2 },
+  { id: 'payment', name: '支付工具', icon: '💳', description: '跨境支付解决方案', sortOrder: 3 },
+  { id: 'payment-channel', name: '支付通道', icon: '💰', description: '国际支付通道', sortOrder: 4 },
+  { id: 'other', name: '其他资源', icon: '📦', description: '其他跨境相关资源', sortOrder: 5 },
 ];
 
 // 初始化默认分类
@@ -35,10 +35,18 @@ export async function getAllCategories(): Promise<Category[]> {
   const { data, error } = await supabase
     .from('categories')
     .select('*')
-    .order('name');
+    .order('sort_order', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+
+  // 转换字段名
+  return (data || []).map(item => ({
+    id: item.id,
+    name: item.name,
+    icon: item.icon,
+    description: item.description || '',
+    sortOrder: item.sort_order || 0,
+  }));
 }
 
 // 获取单个分类
@@ -54,7 +62,14 @@ export async function getCategoryById(id: string): Promise<Category | null> {
     .single();
 
   if (error) return null;
-  return data;
+
+  return {
+    id: data.id,
+    name: data.name,
+    icon: data.icon,
+    description: data.description || '',
+    sortOrder: data.sort_order || 0,
+  };
 }
 
 // 添加分类
@@ -63,16 +78,38 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
     throw new Error('Supabase not configured');
   }
 
+  // 获取当前最大的 sort_order
+  const { data: existing } = await supabase
+    .from('categories')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1);
+
+  const nextSortOrder = existing && existing.length > 0 ? (existing[0].sort_order || 0) + 1 : 0;
+
   const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
   const { data, error } = await supabase
     .from('categories')
-    .insert({ ...category, id })
+    .insert({
+      id,
+      name: category.name,
+      icon: category.icon,
+      description: category.description,
+      sort_order: category.sortOrder ?? nextSortOrder,
+    })
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+
+  return {
+    id: data.id,
+    name: data.name,
+    icon: data.icon,
+    description: data.description || '',
+    sortOrder: data.sort_order || 0,
+  };
 }
 
 // 更新分类
@@ -81,15 +118,28 @@ export async function updateCategory(id: string, updates: Partial<Omit<Category,
     throw new Error('Supabase not configured');
   }
 
+  const updateData: any = {};
+  if (updates.name !== undefined) updateData.name = updates.name;
+  if (updates.icon !== undefined) updateData.icon = updates.icon;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.sortOrder !== undefined) updateData.sort_order = updates.sortOrder;
+
   const { data, error } = await supabase
     .from('categories')
-    .update(updates)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
 
   if (error) return null;
-  return data;
+
+  return {
+    id: data.id,
+    name: data.name,
+    icon: data.icon,
+    description: data.description || '',
+    sortOrder: data.sort_order || 0,
+  };
 }
 
 // 删除分类
@@ -115,6 +165,29 @@ export async function deleteCategory(id: string): Promise<boolean> {
 
   if (error) return false;
   return true;
+}
+
+// 批量更新分类排序
+export async function reorderCategories(categories: { id: string; sortOrder: number }[]): Promise<boolean> {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase not configured');
+  }
+
+  // 批量更新
+  const updates = categories.map(({ id, sortOrder }) =>
+    supabase
+      .from('categories')
+      .update({ sort_order: sortOrder })
+      .eq('id', id)
+  );
+
+  try {
+    await Promise.all(updates);
+    return true;
+  } catch (error) {
+    console.error('Error reordering categories:', error);
+    return false;
+  }
 }
 
 // ==================== 链接管理 ====================

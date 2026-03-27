@@ -18,6 +18,7 @@ export interface Category {
   name: string;
   icon: string;
   description: string;
+  sortOrder: number;
 }
 
 // 预设分类
