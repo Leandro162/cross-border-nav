@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllLinks, addLink } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 
 // GET /api/links - 获取所有链接
 export async function GET(request: NextRequest) {
@@ -22,6 +23,12 @@ export async function GET(request: NextRequest) {
 
 // POST /api/links - 添加新链接
 export async function POST(request: NextRequest) {
+  // 检查认证
+  const authenticated = await isAuthenticated();
+  if (!authenticated) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { url, title, description, icon, image, category, tags } = body;

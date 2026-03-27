@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllCategories, addCategory } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 
 // GET /api/categories - 获取所有分类
 export async function GET() {
@@ -14,6 +15,12 @@ export async function GET() {
 
 // POST /api/categories - 添加新分类
 export async function POST(request: NextRequest) {
+  // 检查认证
+  const authenticated = await isAuthenticated();
+  if (!authenticated) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { name, icon, description } = body;

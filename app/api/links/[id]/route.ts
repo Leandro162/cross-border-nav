@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateLink, deleteLink } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 
 // PUT /api/links/[id] - 更新链接
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // 检查认证
+  const authenticated = await isAuthenticated();
+  if (!authenticated) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -28,6 +35,12 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // 检查认证
+  const authenticated = await isAuthenticated();
+  if (!authenticated) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const success = await deleteLink(id);

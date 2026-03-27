@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Loader2, Check, Settings } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Plus, Loader2, Check, Settings, LogOut } from 'lucide-react';
 import { Category } from '@/lib/types';
 
 interface MetaData {
@@ -13,6 +14,7 @@ interface MetaData {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [url, setUrl] = useState('');
   const [category, setCategory] = useState('');
@@ -22,10 +24,43 @@ export default function AdminPage() {
   const [metaData, setMetaData] = useState<MetaData | null>(null);
   const [message, setMessage] = useState('');
   const [dataLoading, setDataLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/check');
+      const data = await response.json();
+      if (!data.authenticated) {
+        router.push('/login');
+        return;
+      }
+      setIsAuthenticated(true);
+      setAuthChecked(true);
+      fetchCategories();
+    } catch (error) {
+      router.push('/login');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (authChecked && isAuthenticated) {
+      fetchCategories();
+    }
+  }, [authChecked, isAuthenticated]);
 
   const fetchCategories = async () => {
     try {
@@ -119,33 +154,48 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="border-b border-slate-200 bg-white/70 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors inline-flex"
-            >
-              <ArrowLeft size={20} />
-              <span>返回首页</span>
-            </Link>
-            <Link
-              href="/admin/categories"
-              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              <Settings size={20} />
-              <span>分类管理</span>
-            </Link>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800 mt-4">添加新链接</h1>
-          <p className="text-slate-500 text-sm mt-1">输入网址自动获取网站信息</p>
+      {!authChecked ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin text-blue-500" size={40} />
         </div>
-      </header>
+      ) : (
+        <>
+          {/* Header */}
+          <header className="border-b border-slate-200 bg-white/70 backdrop-blur-sm">
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors inline-flex"
+                >
+                  <ArrowLeft size={20} />
+                  <span>返回首页</span>
+                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/admin/categories"
+                    className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
+                  >
+                    <Settings size={20} />
+                    <span>分类管理</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
+                  >
+                    <LogOut size={18} />
+                    <span>登出</span>
+                  </button>
+                </div>
+              </div>
+              <h1 className="text-2xl font-bold text-slate-800 mt-4">添加新链接</h1>
+              <p className="text-slate-500 text-sm mt-1">输入网址自动获取网站信息</p>
+            </div>
+          </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {dataLoading ? (
+          {/* Main Content */}
+          <main className="container mx-auto px-4 py-8 max-w-2xl">
+            {dataLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="animate-spin text-blue-500" size={40} />
           </div>
@@ -294,6 +344,8 @@ export default function AdminPage() {
           </form>
         )}
       </main>
+    </>
+    )}
     </div>
   );
 }

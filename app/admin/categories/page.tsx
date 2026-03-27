@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Edit2, Trash2, Loader2, Check, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Plus, Edit2, Trash2, Loader2, Check, X, LogOut } from 'lucide-react';
 import { Category } from '@/lib/types';
 
 export default function CategoriesPage() {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -13,10 +15,41 @@ export default function CategoriesPage() {
   const [formData, setFormData] = useState({ name: '', icon: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/check');
+      const data = await response.json();
+      if (!data.authenticated) {
+        router.push('/login');
+        return;
+      }
+      setAuthChecked(true);
+      fetchCategories();
+    } catch (error) {
+      router.push('/login');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (authChecked) {
+      fetchCategories();
+    }
+  }, [authChecked]);
 
   const fetchCategories = async () => {
     try {
@@ -98,31 +131,46 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="border-b border-slate-200 bg-white/70 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors inline-flex"
-            >
-              <ArrowLeft size={20} />
-              <span>返回添加链接</span>
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-800">分类管理</h1>
-            <button
-              onClick={() => {
-                resetForm();
-                setShowAddForm(true);
-              }}
-              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              <Plus size={18} />
-              <span>添加分类</span>
-            </button>
-          </div>
+      {!authChecked ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin text-blue-500" size={40} />
         </div>
-      </header>
+      ) : (
+        <>
+          {/* Header */}
+          <header className="border-b border-slate-200 bg-white/70 backdrop-blur-sm">
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors inline-flex"
+                >
+                  <ArrowLeft size={20} />
+                  <span>返回添加链接</span>
+                </Link>
+                <h1 className="text-2xl font-bold text-slate-800">分类管理</h1>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowAddForm(true);
+                    }}
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <Plus size={18} />
+                    <span>添加分类</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
+                  >
+                    <LogOut size={18} />
+                    <span>登出</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
@@ -272,6 +320,8 @@ export default function CategoriesPage() {
           </div>
         )}
       </main>
+    </>
+    )}
     </div>
   );
 }
