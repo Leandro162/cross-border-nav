@@ -21,6 +21,10 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'other', name: '其他资源', icon: '📦', description: '其他跨境相关资源', sortOrder: 5 },
 ];
 
+// 内存存储（用于开发环境）
+let inMemoryCategories: Category[] = [...DEFAULT_CATEGORIES];
+let inMemoryLinks: LinkItem[] = [];
+
 // 初始化默认分类
 export async function initDefaultCategories() {
   if (!isSupabaseConfigured()) return;
@@ -37,7 +41,7 @@ export async function initDefaultCategories() {
 // 获取所有分类
 export async function getAllCategories(): Promise<Category[]> {
   if (!isSupabaseConfigured()) {
-    return DEFAULT_CATEGORIES;
+    return [...inMemoryCategories].sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   const { data, error } = await getSupabase()
@@ -60,7 +64,7 @@ export async function getAllCategories(): Promise<Category[]> {
 // 获取单个分类
 export async function getCategoryById(id: string): Promise<Category | null> {
   if (!isSupabaseConfigured()) {
-    return DEFAULT_CATEGORIES.find(c => c.id === id) || null;
+    return inMemoryCategories.find(c => c.id === id) || null;
   }
 
   const { data, error } = await getSupabase()
@@ -82,8 +86,20 @@ export async function getCategoryById(id: string): Promise<Category | null> {
 
 // 添加分类
 export async function addCategory(category: Omit<Category, 'id'>): Promise<Category> {
+  const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
+    // 使用内存存储
+    const maxSortOrder = Math.max(...inMemoryCategories.map(c => c.sortOrder), -1);
+    const newCategory: Category = {
+      id,
+      name: category.name,
+      icon: category.icon,
+      description: category.description,
+      sortOrder: category.sortOrder ?? maxSortOrder + 1,
+    };
+    inMemoryCategories.push(newCategory);
+    return newCategory;
   }
 
   // 获取当前最大的 sort_order
@@ -94,8 +110,6 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
     .limit(1);
 
   const nextSortOrder = existing && existing.length > 0 ? (existing[0].sort_order || 0) + 1 : 0;
-
-  const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
   const { data, error } = await getSupabase()
     .from('categories')
@@ -123,7 +137,15 @@ export async function addCategory(category: Omit<Category, 'id'>): Promise<Categ
 // 更新分类
 export async function updateCategory(id: string, updates: Partial<Omit<Category, 'id'>>): Promise<Category | null> {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
+    // 使用内存存储
+    const categoryIndex = inMemoryCategories.findIndex(c => c.id === id);
+    if (categoryIndex === -1) return null;
+
+    inMemoryCategories[categoryIndex] = {
+      ...inMemoryCategories[categoryIndex],
+      ...updates,
+    };
+    return inMemoryCategories[categoryIndex];
   }
 
   const updateData: any = {};
@@ -153,7 +175,17 @@ export async function updateCategory(id: string, updates: Partial<Omit<Category,
 // 删除分类
 export async function deleteCategory(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
+    // 使用内存存储
+    // 检查是否有链接使用此分类
+    const hasLinks = inMemoryLinks.some(link => link.category === id);
+    if (hasLinks) {
+      throw new Error('该分类下还有链接，无法删除');
+    }
+
+    const categoryIndex = inMemoryCategories.findIndex(c => c.id === id);
+    if (categoryIndex === -1) return false;
+    inMemoryCategories.splice(categoryIndex, 1);
+    return true;
   }
 
   // 检查是否有链接使用此分类
@@ -178,7 +210,19 @@ export async function deleteCategory(id: string): Promise<boolean> {
 // 批量更新分类排序
 export async function reorderCategories(categories: { id: string; sortOrder: number }[]): Promise<boolean> {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
+    // 使用内存存储
+    try {
+      categories.forEach(({ id, sortOrder }) => {
+        const category = inMemoryCategories.find(c => c.id === id);
+        if (category) {
+          category.sortOrder = sortOrder;
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+      return false;
+    }
   }
 
   // 批量更新
@@ -203,7 +247,7 @@ export async function reorderCategories(categories: { id: string; sortOrder: num
 // 获取所有链接
 export async function getAllLinks(): Promise<LinkItem[]> {
   if (!isSupabaseConfigured()) {
-    return [];
+    return [...inMemoryLinks].reverse();
   }
 
   const { data, error } = await getSupabase()
@@ -231,7 +275,7 @@ export async function getAllLinks(): Promise<LinkItem[]> {
 // 获取指定分类的链接
 export async function getLinksByCategory(category: string): Promise<LinkItem[]> {
   if (!isSupabaseConfigured()) {
-    return [];
+    return inMemoryLinks.filter(link => link.category === category);
   }
 
   const { data, error } = await getSupabase()
@@ -258,12 +302,26 @@ export async function getLinksByCategory(category: string): Promise<LinkItem[]> 
 
 // 添加链接
 export async function addLink(link: Omit<LinkItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<LinkItem> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
-  }
-
   const id = Date.now().toString();
   const now = new Date().toISOString();
+
+  if (!isSupabaseConfigured()) {
+    // 使用内存存储
+    const newLink: LinkItem = {
+      id,
+      url: link.url,
+      title: link.title,
+      description: link.description,
+      icon: link.icon,
+      image: link.image,
+      category: link.category,
+      tags: link.tags,
+      createdAt: now,
+      updatedAt: now,
+    };
+    inMemoryLinks.push(newLink);
+    return newLink;
+  }
 
   const { data, error } = await getSupabase()
     .from('links')
@@ -301,7 +359,16 @@ export async function addLink(link: Omit<LinkItem, 'id' | 'createdAt' | 'updated
 // 更新链接
 export async function updateLink(id: string, updates: Partial<LinkItem>): Promise<LinkItem | null> {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
+    // 使用内存存储
+    const linkIndex = inMemoryLinks.findIndex(link => link.id === id);
+    if (linkIndex === -1) return null;
+
+    inMemoryLinks[linkIndex] = {
+      ...inMemoryLinks[linkIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    return inMemoryLinks[linkIndex];
   }
 
   const updateData: any = {
@@ -342,7 +409,11 @@ export async function updateLink(id: string, updates: Partial<LinkItem>): Promis
 // 删除链接
 export async function deleteLink(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase not configured');
+    // 使用内存存储
+    const linkIndex = inMemoryLinks.findIndex(link => link.id === id);
+    if (linkIndex === -1) return false;
+    inMemoryLinks.splice(linkIndex, 1);
+    return true;
   }
 
   const { error } = await getSupabase()
