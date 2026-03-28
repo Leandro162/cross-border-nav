@@ -24,8 +24,11 @@ export default function Home() {
     filterLinks();
   }, [links, selectedCategory, searchQuery]);
 
-  // 滚动监听 - 自动高亮当前可见的分类
+  // 滚动监听 - 自动高亮当前可见的分类（仅在显示全部时）
   useEffect(() => {
+    // 只有在显示全部分类时才启用滚动监听
+    if (selectedCategory !== 'all' || searchQuery) return;
+
     const handleScroll = () => {
       const categorySections = Array.from(categorySectionRefs.current.entries());
       const newVisibleIds = new Set<string>();
@@ -66,7 +69,7 @@ export default function Home() {
     handleScroll(); // 初始检查
 
     return () => window.removeEventListener('scroll', throttledScroll);
-  }, [selectedCategory]);
+  }, [selectedCategory, searchQuery]);
 
   const fetchData = async () => {
     try {
@@ -117,9 +120,9 @@ export default function Home() {
     return grouped;
   };
 
-  // 搜索时显示过滤结果，否则显示按分类分组的结果
-  const displayLinks = searchQuery ? filteredLinks : null;
-  const groupedLinks = searchQuery ? null : getLinksByCategory();
+  // 搜索时或选中特定分类时显示过滤结果，否则显示按分类分组的结果
+  const displayLinks = (searchQuery || selectedCategory !== 'all') ? filteredLinks : null;
+  const groupedLinks = (searchQuery || selectedCategory !== 'all') ? null : getLinksByCategory();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -174,10 +177,7 @@ export default function Home() {
                       key={cat.id}
                       onClick={() => {
                         setSelectedCategory(cat.id);
-                        const section = categorySectionRefs.current.get(cat.id);
-                        if (section) {
-                          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
                         selectedCategory === cat.id
@@ -204,18 +204,27 @@ export default function Home() {
                 <Loader2 className="animate-spin text-blue-500" size={40} />
               </div>
             ) : displayLinks ? (
-              // 搜索结果
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {displayLinks.map(link => (
-                  <LinkCard key={link.id} link={link} categories={categories} />
-                ))}
-              </div>
+              // 搜索结果或选中特定分类
+              <>
+                {selectedCategory !== 'all' && !searchQuery && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">{categories.find(c => c.id === selectedCategory)?.icon}</span>
+                    <h2 className="text-xl font-bold text-slate-800">{categories.find(c => c.id === selectedCategory)?.name}</h2>
+                    <span className="text-sm text-slate-400">({displayLinks.length})</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {displayLinks.map(link => (
+                    <LinkCard key={link.id} link={link} categories={categories} />
+                  ))}
+                </div>
+              </>
             ) : Object.keys(groupedLinks || {}).length === 0 ? (
               <div className="text-center py-20 text-slate-400 glass-card rounded-2xl">
                 <p className="text-lg">暂无链接</p>
               </div>
             ) : (
-              // 按分类显示
+              // 按分类显示全部
               <div className="space-y-8">
                 {categories.map(cat => {
                   const catLinks = groupedLinks?.[cat.id] || [];
