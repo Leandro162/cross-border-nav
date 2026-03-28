@@ -143,12 +143,10 @@ export default function AdminPage() {
 
       if (response.ok) {
         setMessage('✓ 链接添加成功！');
+        // 清空表单，方便继续添加
         setUrl('');
         setTags('');
         setMetaData(null);
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1000);
       } else {
         setMessage('添加失败，请重试');
       }
