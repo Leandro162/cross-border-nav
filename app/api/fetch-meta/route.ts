@@ -18,12 +18,12 @@ export async function POST(request: NextRequest) {
 
     // 获取网站内容
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 增加到30秒
 
     const response = await fetch(validUrl.toString(), {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
     });
     clearTimeout(timeoutId);
@@ -62,15 +62,28 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching metadata:', error);
+
+    // 判断错误类型
+    let errorMessage = '获取失败';
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        errorMessage = '请求超时，网站响应太慢或无法访问';
+      } else if (error.message.includes('ECONNREFUSED') || error.message.includes('ENOTFOUND')) {
+        errorMessage = '无法访问该网站，请检查网址是否正确';
+      } else {
+        errorMessage = `获取失败: ${error.message}`;
+      }
+    }
+
     return NextResponse.json(
       {
-        error: 'Failed to fetch website metadata',
-        title: '网站标题',
+        error: errorMessage,
+        title: '',
         description: '',
         icon: '',
         image: '',
       },
-      { status: 200 }
+      { status: 200 } // 仍然返回 200，让前端可以显示错误信息
     );
   }
 }

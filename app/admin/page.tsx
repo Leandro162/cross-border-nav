@@ -85,6 +85,7 @@ export default function AdminPage() {
 
     setFetching(true);
     setMessage('');
+    setMetaData(null); // 清除之前的数据
 
     try {
       const response = await fetch('/api/fetch-meta', {
@@ -95,11 +96,17 @@ export default function AdminPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        setMetaData(data);
-        setMessage('✓ 成功获取网站信息');
+      // 检查是否有错误
+      if (data.error && !data.title) {
+        setMessage('获取失败：' + data.error);
+        return;
+      }
+
+      setMetaData(data);
+      if (data.error) {
+        setMessage('⚠️ ' + data.error + '，已获取部分信息');
       } else {
-        setMessage('获取失败：' + (data.error || '未知错误'));
+        setMessage('✓ 成功获取网站信息');
       }
     } catch (error) {
       setMessage('获取失败，请稍后重试');
