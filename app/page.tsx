@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Search, Plus, ExternalLink, Trash2, Loader2 } from 'lucide-react';
+import { Search, ExternalLink, Loader2 } from 'lucide-react';
 import { LinkItem, Category } from '@/lib/types';
 
 export default function Home() {
@@ -58,17 +57,6 @@ export default function Home() {
     setFilteredLinks(filtered);
   };
 
-  const deleteLink = async (id: string) => {
-    if (!confirm('确定要删除这个链接吗？')) return;
-
-    try {
-      await fetch(`/api/links/${id}`, { method: 'DELETE' });
-      setLinks(links.filter(link => link.id !== id));
-    } catch (error) {
-      console.error('Error deleting link:', error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header - 简化版 */}
@@ -81,13 +69,6 @@ export default function Home() {
                 <p className="text-slate-500 text-sm mt-0.5">分享最实用的跨境工具和资源</p>
               </div>
             </div>
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all shadow-lg hover:shadow-blue-500/25"
-            >
-              <Plus size={18} />
-              <span>添加链接</span>
-            </Link>
           </div>
 
           {/* Search Bar */}
@@ -159,12 +140,11 @@ export default function Home() {
             ) : filteredLinks.length === 0 ? (
               <div className="text-center py-20 text-slate-400 glass-card rounded-2xl">
                 <p className="text-lg">暂无链接</p>
-                <p className="text-sm mt-2">点击右上角「添加链接」开始添加吧！</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {filteredLinks.map(link => (
-                  <LinkCard key={link.id} link={link} onDelete={deleteLink} categories={categories} />
+                  <LinkCard key={link.id} link={link} categories={categories} />
                 ))}
               </div>
             )}
@@ -180,7 +160,7 @@ export default function Home() {
   );
 }
 
-function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (id: string) => void; categories: Category[] }) {
+function LinkCard({ link, categories }: { link: LinkItem; categories: Category[] }) {
   const category = categories.find(c => c.id === link.category);
   const [thumbUrl, setThumbUrl] = useState<string>(link.image || link.icon);
   const [imageError, setImageError] = useState(false);
@@ -239,7 +219,7 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
             <p className="text-slate-500 text-xs mt-1.5 line-clamp-2">{link.description || '暂无描述'}</p>
           </div>
 
-          {/* 底部：标签和删除按钮 */}
+          {/* 底部：标签 */}
           <div className="flex items-center justify-between mt-2">
             {/* 标签 */}
             {link.tags.length > 0 && (
@@ -257,14 +237,6 @@ function LinkCard({ link, onDelete, categories }: { link: LinkItem; onDelete: (i
                 )}
               </div>
             )}
-
-            {/* 删除按钮 */}
-            <button
-              onClick={() => onDelete(link.id)}
-              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-            >
-              <Trash2 size={14} />
-            </button>
           </div>
         </div>
       </div>
