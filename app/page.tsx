@@ -167,7 +167,6 @@ export default function Home() {
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                   }`}
                 >
-                  <span className="text-lg">🏠</span>
                   <span className="font-medium">全部</span>
                 </button>
                 {categories.map(cat => {
@@ -185,7 +184,6 @@ export default function Home() {
                           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                       }`}
                     >
-                      <span className="text-lg">{cat.icon}</span>
                       <span className="font-medium text-sm">{cat.name}</span>
                       {count > 0 && (
                         <span className="ml-auto text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{count}</span>
@@ -208,7 +206,6 @@ export default function Home() {
               <>
                 {selectedCategory !== 'all' && !searchQuery && (
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">{categories.find(c => c.id === selectedCategory)?.icon}</span>
                     <h2 className="text-xl font-bold text-slate-800">{categories.find(c => c.id === selectedCategory)?.name}</h2>
                     <span className="text-sm text-slate-400">({displayLinks.length})</span>
                   </div>
@@ -240,7 +237,6 @@ export default function Home() {
                     >
                       {/* 分类标题 */}
                       <div className="flex items-center gap-3 mb-4">
-                        <span className="text-2xl">{cat.icon}</span>
                         <h2 className="text-xl font-bold text-slate-800">{cat.name}</h2>
                         <span className="text-sm text-slate-400">({catLinks.length})</span>
                       </div>
