@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       name,
       icon,
       description: description || '',
+      sortOrder: 0, // 默认排序，可以通过拖拽调整
     });
 
     return NextResponse.json(newCategory, { status: 201 });

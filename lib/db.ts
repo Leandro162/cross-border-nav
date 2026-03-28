@@ -227,7 +227,7 @@ export async function reorderCategories(categories: { id: string; sortOrder: num
 
   // 批量更新
   const updates = categories.map(({ id, sortOrder }) =>
-    supabase
+    getSupabase()
       .from('categories')
       .update({ sort_order: sortOrder })
       .eq('id', id)

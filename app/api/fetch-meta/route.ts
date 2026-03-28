@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to fetch website metadata',
-        title: new URL(request.json().then((d: any) => d.url).catch(() => '')).hostname,
+        title: '网站标题',
         description: '',
-        icon: `https://www.google.com/s2/favicons?domain=${new URL(request.json().then((d: any) => d.url).catch(() => '')).hostname}&sz=64`,
+        icon: '',
         image: '',
       },
       { status: 200 }
