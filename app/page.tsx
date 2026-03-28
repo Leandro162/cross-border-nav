@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Search, ExternalLink, Loader2 } from 'lucide-react';
 import { LinkItem, Category } from '@/lib/types';
 
@@ -11,6 +11,10 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [visibleCategoryIds, setVisibleCategoryIds] = useState<Set<string>>(new Set());
+
+  // 分类标题的引用，用于滚动监听
+  const categorySectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   useEffect(() => {
     fetchData();
@@ -19,6 +23,50 @@ export default function Home() {
   useEffect(() => {
     filterLinks();
   }, [links, selectedCategory, searchQuery]);
+
+  // 滚动监听 - 自动高亮当前可见的分类
+  useEffect(() => {
+    const handleScroll = () => {
+      const categorySections = Array.from(categorySectionRefs.current.entries());
+      const newVisibleIds = new Set<string>();
+
+      categorySections.forEach(([categoryId, element]) => {
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        // 当分类区域进入视口中心时高亮
+        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+          newVisibleIds.add(categoryId);
+        }
+      });
+
+      // 如果有可见的分类，高亮第一个
+      if (newVisibleIds.size > 0) {
+        const firstVisible = Array.from(newVisibleIds)[0];
+        if (firstVisible !== selectedCategory) {
+          setSelectedCategory(firstVisible);
+        }
+      }
+
+      setVisibleCategoryIds(newVisibleIds);
+    };
+
+    // 使用节流优化性能
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    handleScroll(); // 初始检查
+
+    return () => window.removeEventListener('scroll', throttledScroll);
+  }, [selectedCategory]);
 
   const fetchData = async () => {
     try {
@@ -57,18 +105,30 @@ export default function Home() {
     setFilteredLinks(filtered);
   };
 
+  // 按分类分组链接
+  const getLinksByCategory = () => {
+    const grouped: Record<string, LinkItem[]> = {};
+    links.forEach(link => {
+      if (!grouped[link.category]) {
+        grouped[link.category] = [];
+      }
+      grouped[link.category].push(link);
+    });
+    return grouped;
+  };
+
+  // 搜索时显示过滤结果，否则显示按分类分组的结果
+  const displayLinks = searchQuery ? filteredLinks : null;
+  const groupedLinks = searchQuery ? null : getLinksByCategory();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header - 简化版 */}
+      {/* Header */}
       <header className="glass sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-800">跨境工具导航</h1>
-                <p className="text-slate-500 text-sm mt-0.5">分享最实用的跨境工具和资源</p>
-              </div>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">跨境工具导航</h1>
+            <p className="text-slate-500 text-sm mt-0.5">分享最实用的跨境工具和资源</p>
           </div>
 
           {/* Search Bar */}
@@ -85,7 +145,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content - 左右侧栏布局 */}
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">
           {/* 左侧分类边栏 */}
@@ -94,7 +154,10 @@ export default function Home() {
               <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">分类</h2>
               <nav className="space-y-1">
                 <button
-                  onClick={() => setSelectedCategory('all')}
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
                     selectedCategory === 'all'
                       ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
@@ -103,16 +166,19 @@ export default function Home() {
                 >
                   <span className="text-lg">🏠</span>
                   <span className="font-medium">全部</span>
-                  {links.length > 0 && (
-                    <span className="ml-auto text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{links.length}</span>
-                  )}
                 </button>
                 {categories.map(cat => {
                   const count = links.filter(link => link.category === cat.id).length;
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        const section = categorySectionRefs.current.get(cat.id);
+                        if (section) {
+                          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
                       className={`w-full px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 ${
                         selectedCategory === cat.id
                           ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
@@ -137,15 +203,48 @@ export default function Home() {
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="animate-spin text-blue-500" size={40} />
               </div>
-            ) : filteredLinks.length === 0 ? (
+            ) : displayLinks ? (
+              // 搜索结果
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {displayLinks.map(link => (
+                  <LinkCard key={link.id} link={link} categories={categories} />
+                ))}
+              </div>
+            ) : Object.keys(groupedLinks || {}).length === 0 ? (
               <div className="text-center py-20 text-slate-400 glass-card rounded-2xl">
                 <p className="text-lg">暂无链接</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {filteredLinks.map(link => (
-                  <LinkCard key={link.id} link={link} categories={categories} />
-                ))}
+              // 按分类显示
+              <div className="space-y-8">
+                {categories.map(cat => {
+                  const catLinks = groupedLinks?.[cat.id] || [];
+                  if (catLinks.length === 0) return null;
+
+                  return (
+                    <div
+                      key={cat.id}
+                      ref={el => {
+                        if (el) categorySectionRefs.current.set(cat.id, el);
+                      }}
+                      className="category-section"
+                    >
+                      {/* 分类标题 */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">{cat.icon}</span>
+                        <h2 className="text-xl font-bold text-slate-800">{cat.name}</h2>
+                        <span className="text-sm text-slate-400">({catLinks.length})</span>
+                      </div>
+
+                      {/* 该分类的链接 */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {catLinks.map(link => (
+                          <LinkCard key={link.id} link={link} categories={categories} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </main>
@@ -164,6 +263,31 @@ function LinkCard({ link, categories }: { link: LinkItem; categories: Category[]
   const category = categories.find(c => c.id === link.category);
   const [thumbUrl, setThumbUrl] = useState<string>(link.image || link.icon);
   const [imageError, setImageError] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // 滚动动画 - 使用 Intersection Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     setThumbUrl(link.image || link.icon);
@@ -173,7 +297,12 @@ function LinkCard({ link, categories }: { link: LinkItem; categories: Category[]
   const hasThumbnail = link.image && !imageError;
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden group hover:scale-[1.02] transition-transform duration-200">
+    <div
+      ref={cardRef}
+      className={`glass-card rounded-xl overflow-hidden group hover:scale-[1.02] transition-all duration-300 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+    >
       {/* 横向布局 */}
       <div className="flex">
         {/* 左侧缩略图区域 */}
