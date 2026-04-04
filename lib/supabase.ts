@@ -10,7 +10,7 @@ export interface DbCategory {
   id: string;
   name: string;
   slug: string;
-  order: number;
+  order_num: number;
   created_at: string;
   updated_at: string;
 }
@@ -22,7 +22,7 @@ export interface DbTool {
   url: string;
   logo_url: string | null;
   category_id: string;
-  order: number;
+  order_num: number;
   has_deal: boolean;
   deal_count: number | null;
   created_at: string;
