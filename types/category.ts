@@ -1,15 +1,11 @@
-import { Document } from 'mongoose';
-
 export interface Category {
-  _id: string;
+  id: string;
   name: string;
   slug: string;
-  order: number;
-  createdAt: Date;
-  updatedAt: Date;
+  order_num: number;
+  created_at: string;
+  updated_at: string;
 }
-
-export interface CategoryDocument extends Omit<Category, '_id'>, Document {}
 
 export interface CreateCategoryInput {
   name: string;

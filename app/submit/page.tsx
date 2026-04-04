@@ -80,7 +80,13 @@ export default function SubmitPage() {
       const response = await fetch('/api/tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          url: formData.url,
+          categoryId: formData.categoryId,
+          hasDeal: formData.hasDeal,
+        }),
       });
 
       const data = await response.json();
@@ -100,7 +106,7 @@ export default function SubmitPage() {
 
   const categoryOptions = [
     { value: '', label: '选择分类' },
-    ...categories.map((cat) => ({ value: cat._id, label: cat.name })),
+    ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
   ];
 
   return (

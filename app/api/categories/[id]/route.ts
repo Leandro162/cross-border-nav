@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import Category from '@/lib/models/Category.model';
+import { supabase } from '@/lib/supabase';
 import { ApiResponse } from '@/types/api';
-import { UpdateCategoryInput } from '@/types/category';
 
 // PUT /api/categories/[id] - Update a category
 export async function PUT(
@@ -10,10 +8,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-
     const { id } = await params;
-    const body: UpdateCategoryInput = await request.json();
+    const body = await request.json();
 
     // Generate slug from name if name is being updated and slug is not provided
     if (body.name && !body.slug) {
@@ -23,18 +19,17 @@ export async function PUT(
         .replace(/(^-|-$)/g, '');
     }
 
-    const category = await Category.findByIdAndUpdate(
-      id,
-      { $set: body },
-      { new: true, runValidators: true }
-    );
+    const { data: category, error } = await supabase
+      .from('categories')
+      .update({
+        name: body.name,
+        slug: body.slug,
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (!category) {
-      return NextResponse.json<ApiResponse<any>>(
-        { success: false, error: 'Category not found' },
-        { status: 404 }
-      );
-    }
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>({
       success: true,
@@ -55,29 +50,29 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-
     const { id } = await params;
 
     // Check if category has tools
-    const Tool = (await import('@/lib/models/Tool.model')).default;
-    const toolCount = await Tool.countDocuments({ categoryId: id });
+    const { data: tools, error: countError } = await supabase
+      .from('tools')
+      .select('id', { count: 'exact', head: true })
+      .eq('category_id', id);
 
-    if (toolCount > 0) {
+    if (countError) throw countError;
+
+    if (tools && tools.length > 0) {
       return NextResponse.json<ApiResponse<any>>(
         { success: false, error: 'Cannot delete category with existing tools' },
         { status: 400 }
       );
     }
 
-    const category = await Category.findByIdAndDelete(id);
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
 
-    if (!category) {
-      return NextResponse.json<ApiResponse<any>>(
-        { success: false, error: 'Category not found' },
-        { status: 404 }
-      );
-    }
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>({
       success: true,

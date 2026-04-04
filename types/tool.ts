@@ -1,22 +1,19 @@
-import { Document } from 'mongoose';
 import { Category } from './category';
 
 export interface Tool {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   url: string;
-  logoUrl?: string | null;
-  categoryId: string;
-  category?: Category;
-  order: number;
-  hasDeal: boolean;
-  dealCount?: number | null;
-  createdAt: Date;
-  updatedAt: Date;
+  logo_url: string | null;
+  category_id: string;
+  categories?: Category;
+  order_num: number;
+  has_deal: boolean;
+  deal_count: number | null;
+  created_at: string;
+  updated_at: string;
 }
-
-export interface ToolDocument extends Omit<Tool, '_id'>, Document {}
 
 export interface CreateToolInput {
   name: string;

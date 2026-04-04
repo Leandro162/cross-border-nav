@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import Category from '@/lib/models/Category.model';
+import { supabase } from '@/lib/supabase';
 import { ApiResponse } from '@/types/api';
-import { CreateCategoryInput } from '@/types/category';
 
 // GET /api/categories - Get all categories
 export async function GET() {
   try {
-    await connectDB();
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('order_num', { ascending: true });
 
-    const categories = await Category.find({})
-      .sort({ order: 1, name: 1 })
-      .lean();
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>({
       success: true,
@@ -29,9 +28,7 @@ export async function GET() {
 // POST /api/categories - Create a new category
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
-    const body: CreateCategoryInput = await request.json();
+    const body = await request.json();
 
     // Generate slug from name if not provided
     if (!body.slug) {
@@ -41,22 +38,26 @@ export async function POST(request: NextRequest) {
         .replace(/(^-|-$)/g, '');
     }
 
-    // Check if slug already exists
-    const existing = await Category.findOne({ slug: body.slug });
-    if (existing) {
-      return NextResponse.json<ApiResponse<any>>(
-        { success: false, error: 'Category with this slug already exists' },
-        { status: 400 }
-      );
-    }
+    // Get the current max order
+    const { data: maxOrderData } = await supabase
+      .from('categories')
+      .select('order_num')
+      .order('order_num', { ascending: false })
+      .limit(1);
 
-    // Set order if not provided
-    if (!body.order) {
-      const count = await Category.countDocuments();
-      body.order = count;
-    }
+    const nextOrder = ((maxOrderData && maxOrderData[0]?.order_num) ?? -1) + 1;
 
-    const category = await Category.create(body);
+    const { data: category, error } = await supabase
+      .from('categories')
+      .insert({
+        name: body.name,
+        slug: body.slug,
+        order_num: body.order ?? nextOrder,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>(
       { success: true, data: category },

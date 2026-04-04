@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import Tool from '@/lib/models/Tool.model';
-import { ApiResponse } from '@/types/api';
-
-interface ReorderItem {
-  id: string;
-  order: number;
-}
+import { supabase } from '@/lib/supabase';
+import { ApiResponse, MetadataResponse } from '@/types/api';
+import { fetchMetadata } from '@/lib/services/metadata';
 
 // POST /api/reorder - Update order of tools
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
-    const { items }: { items: ReorderItem[] } = await request.json();
+    const { items }: { items: { id: string; order: number }[] } = await request.json();
 
     if (!Array.isArray(items)) {
       return NextResponse.json<ApiResponse<any>>(
@@ -23,11 +16,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Update each tool's order
-    const updatePromises = items.map(({ id, order }) =>
-      Tool.findByIdAndUpdate(id, { order }, { new: true })
-    );
+    for (const { id, order } of items) {
+      const { error } = await supabase
+        .from('tools')
+        .update({ order_num: order })
+        .eq('id', id);
 
-    await Promise.all(updatePromises);
+      if (error) throw error;
+    }
 
     return NextResponse.json<ApiResponse<any>>({
       success: true,

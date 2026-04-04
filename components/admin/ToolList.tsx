@@ -46,15 +46,15 @@ export default function ToolList({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((item) => item._id === active.id);
-      const newIndex = items.findIndex((item) => item._id === over.id);
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
 
       const newItems = arrayMove(items, oldIndex, newIndex);
       setItems(newItems);
 
       // Reorder items with new order values
       const reorderData = newItems.map((item, index) => ({
-        id: item._id,
+        id: item.id,
         order: index,
       }));
 
@@ -73,7 +73,7 @@ export default function ToolList({
 
   const handleDelete = async (id: string) => {
     await onDelete(id);
-    setItems(items.filter((item) => item._id !== id));
+    setItems(items.filter((item) => item.id !== id));
   };
 
   return (
@@ -90,13 +90,13 @@ export default function ToolList({
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={items.map((item) => item._id)}
+          items={items.map((item) => item.id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-2">
             {items.map((tool) => (
               <SortableToolItem
-                key={tool._id}
+                key={tool.id}
                 tool={tool}
                 onEdit={onEdit}
                 onDelete={handleDelete}

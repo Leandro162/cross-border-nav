@@ -27,9 +27,9 @@ export default function ToolCard({ tool }: ToolCardProps) {
         <div className="flex items-start gap-4">
           {/* Logo */}
           <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
-            {tool.logoUrl ? (
+            {tool.logo_url ? (
               <Image
-                src={tool.logoUrl}
+                src={tool.logo_url}
                 alt={tool.name}
                 fill
                 className="object-cover"
@@ -52,10 +52,10 @@ export default function ToolCard({ tool }: ToolCardProps) {
             </p>
 
             {/* Deal Badge */}
-            {tool.hasDeal && (
+            {tool.has_deal && (
               <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                {tool.dealCount ? `${tool.dealCount} ` : ''}deal
-                {tool.dealCount !== 1 ? 's' : ''}
+                {tool.deal_count ? `${tool.deal_count} ` : ''}deal
+                {tool.deal_count !== 1 ? 's' : ''}
               </span>
             )}
           </div>

@@ -24,7 +24,7 @@ export default function SortableToolItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: tool._id });
+  } = useSortable({ id: tool.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -52,9 +52,9 @@ export default function SortableToolItem({
 
       {/* Tool Logo */}
       <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
-        {tool.logoUrl ? (
+        {tool.logo_url ? (
           <Image
-            src={tool.logoUrl}
+            src={tool.logo_url}
             alt={tool.name}
             fill
             className="object-cover"
@@ -79,11 +79,11 @@ export default function SortableToolItem({
 
       {/* Category */}
       <span className="hidden rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 sm:block">
-        {tool.category?.name || '-'}
+        {tool.categories?.name || '-'}
       </span>
 
       {/* Deal Badge */}
-      {tool.hasDeal && (
+      {tool.has_deal && (
         <span className="hidden rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400 sm:block">
           Deal
         </span>
@@ -103,7 +103,7 @@ export default function SortableToolItem({
         <button
           onClick={() => {
             if (confirm(`确定要删除 "${tool.name}" 吗？`)) {
-              onDelete(tool._id);
+              onDelete(tool.id);
             }
           }}
           className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800 dark:hover:text-red-400"

@@ -32,10 +32,10 @@ export default function CategoryFilter({
       </motion.button>
       {categories.map((category) => (
         <motion.button
-          key={category._id}
-          onClick={() => onSelectCategory(category._id)}
+          key={category.id}
+          onClick={() => onSelectCategory(category.id)}
           className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            selectedCategory === category._id
+            selectedCategory === category.id
               ? 'bg-blue-600 text-white'
               : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
           }`}

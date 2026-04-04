@@ -26,7 +26,7 @@ export default function ToolGrid({ tools }: ToolGridProps) {
       className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
     >
       {tools.map((tool) => (
-        <ToolCard key={tool._id} tool={tool} />
+        <ToolCard key={tool.id} tool={tool} />
       ))}
     </motion.div>
   );

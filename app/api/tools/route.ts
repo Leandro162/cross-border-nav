@@ -1,45 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import Tool from '@/lib/models/Tool.model';
+import { supabase } from '@/lib/supabase';
 import { ApiResponse, PaginationResponse } from '@/types/api';
-import { CreateToolInput } from '@/types/tool';
 import { fetchMetadata } from '@/lib/services/metadata';
 
 // GET /api/tools - Get all tools with optional filtering
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const query: any = {};
+    let query = supabase
+      .from('tools')
+      .select('*, categories(*)', { count: 'exact' });
 
     if (category && category !== 'all') {
-      query.categoryId = category;
+      query = query.eq('category_id', category);
     }
 
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    const [tools, total] = await Promise.all([
-      Tool.find(query)
-        .populate('categoryId')
-        .sort({ order: 1, createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Tool.countDocuments(query),
-    ]);
+    query = query
+      .order('order_num', { ascending: true })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    const { data: tools, error, count } = await query;
+
+    if (error) throw error;
+
+    const total = count || 0;
 
     return NextResponse.json<PaginationResponse<any>>({
       success: true,
@@ -63,9 +60,7 @@ export async function GET(request: NextRequest) {
 // POST /api/tools - Create a new tool
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
-    const body: CreateToolInput = await request.json();
+    const body = await request.json();
 
     // Validate required fields
     if (!body.name || !body.url || !body.categoryId) {
@@ -93,20 +88,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const tool = await Tool.create({
-      name: body.name,
-      description: description || body.name,
-      url: body.url,
-      logoUrl,
-      categoryId: body.categoryId,
-      hasDeal: body.hasDeal || false,
-      dealCount: body.dealCount,
-    });
+    // Get the current max order for this category
+    const { data: maxOrderData } = await supabase
+      .from('tools')
+      .select('order_num')
+      .eq('category_id', body.categoryId)
+      .order('order_num', { ascending: false })
+      .limit(1);
 
-    const populatedTool = await Tool.findById(tool._id).populate('categoryId');
+    const nextOrder = ((maxOrderData && maxOrderData[0]?.order_num) ?? -1) + 1;
+
+    const { data: tool, error } = await supabase
+      .from('tools')
+      .insert({
+        name: body.name,
+        description: description || body.name,
+        url: body.url,
+        logo_url: logoUrl,
+        category_id: body.categoryId,
+        has_deal: body.hasDeal || false,
+        deal_count: body.dealCount,
+        order_num: nextOrder,
+      })
+      .select('*, categories(*)')
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>(
-      { success: true, data: populatedTool },
+      { success: true, data: tool },
       { status: 201 }
     );
   } catch (error: any) {

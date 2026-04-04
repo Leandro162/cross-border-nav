@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import Tool from '@/lib/models/Tool.model';
+import { supabase } from '@/lib/supabase';
 import { ApiResponse } from '@/types/api';
-import { UpdateToolInput } from '@/types/tool';
 
 // PUT /api/tools/[id] - Update a tool
 export async function PUT(
@@ -10,23 +8,24 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-
     const { id } = await params;
-    const body: UpdateToolInput = await request.json();
+    const body = await request.json();
 
-    const tool = await Tool.findByIdAndUpdate(
-      id,
-      { $set: body },
-      { new: true, runValidators: true }
-    ).populate('categoryId');
+    const { data: tool, error } = await supabase
+      .from('tools')
+      .update({
+        name: body.name,
+        description: body.description,
+        url: body.url,
+        logo_url: body.logoUrl,
+        has_deal: body.hasDeal,
+        deal_count: body.dealCount,
+      })
+      .eq('id', id)
+      .select('*, categories(*)')
+      .single();
 
-    if (!tool) {
-      return NextResponse.json<ApiResponse<any>>(
-        { success: false, error: 'Tool not found' },
-        { status: 404 }
-      );
-    }
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>({
       success: true,
@@ -47,18 +46,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-
     const { id } = await params;
 
-    const tool = await Tool.findByIdAndDelete(id);
+    const { error } = await supabase
+      .from('tools')
+      .delete()
+      .eq('id', id);
 
-    if (!tool) {
-      return NextResponse.json<ApiResponse<any>>(
-        { success: false, error: 'Tool not found' },
-        { status: 404 }
-      );
-    }
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse<any>>({
       success: true,

@@ -56,14 +56,14 @@ export default function AdminToolsPage() {
 
     if (!editingTool) return;
 
-    const response = await fetch(`/api/tools/${editingTool._id}`, {
+    const response = await fetch(`/api/tools/${editingTool.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: editingTool.name,
         description: editingTool.description,
         url: editingTool.url,
-        hasDeal: editingTool.hasDeal,
+        hasDeal: editingTool.has_deal,
       }),
     });
 
@@ -165,9 +165,9 @@ export default function AdminToolsPage() {
                 <input
                   type="checkbox"
                   id="edit-hasDeal"
-                  checked={editingTool.hasDeal}
+                  checked={editingTool.has_deal}
                   onChange={(e) =>
-                    setEditingTool({ ...editingTool, hasDeal: e.target.checked })
+                    setEditingTool({ ...editingTool, has_deal: e.target.checked })
                   }
                   className="h-4 w-4 rounded border-zinc-300 text-blue-600"
                 />

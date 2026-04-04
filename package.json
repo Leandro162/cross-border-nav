@@ -13,6 +13,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.101.1",
     "framer-motion": "^12.38.0",
     "metascraper": "^5.50.0",
     "metascraper-author": "^5.50.0",

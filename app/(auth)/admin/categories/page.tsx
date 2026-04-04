@@ -44,7 +44,7 @@ export default function AdminCategoriesPage() {
 
     if (!editingCategory) return;
 
-    const response = await fetch(`/api/categories/${editingCategory._id}`, {
+    const response = await fetch(`/api/categories/${editingCategory.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: editingCategory.name }),
@@ -109,7 +109,7 @@ export default function AdminCategoriesPage() {
         <div className="space-y-2">
           {categories.map((category) => (
             <div
-              key={category._id}
+              key={category.id}
               className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
             >
               <div className="flex items-center gap-4">
@@ -130,7 +130,7 @@ export default function AdminCategoriesPage() {
                   </svg>
                 </button>
                 <button
-                  onClick={() => handleDelete(category._id, category.name)}
+                  onClick={() => handleDelete(category.id, category.name)}
                   className="rounded p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800 dark:hover:text-red-400"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
