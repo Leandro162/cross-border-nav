@@ -556,11 +556,21 @@ export default function AdminToolsPage() {
                     </p>
                   )}
                   {!fetchingMetadata && metadataStatus === 'error' && (
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      {statusMessage}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm text-red-600 dark:text-red-400">
+                        {statusMessage}
+                      </p>
+                      <a
+                        href={newTool.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 underline"
+                      >
+                        打开网站查看
+                      </a>
+                    </div>
                   )}
-                  {!fetchingMetadata && newTool.url && isValidUrl(newTool.url) && (
+                  {!fetchingMetadata && newTool.url && isValidUrl(newTool.url) && metadataStatus !== 'error' && (
                     <button
                       type="button"
                       onClick={fetchMetadata}
@@ -570,6 +580,11 @@ export default function AdminToolsPage() {
                     </button>
                   )}
                 </div>
+                {metadataStatus === 'error' && (
+                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    请手动输入工具名称和描述，或点击上方链接打开网站复制信息
+                  </p>
+                )}
               </div>
 
               <div>
