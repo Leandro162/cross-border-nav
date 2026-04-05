@@ -43,9 +43,7 @@ export default function AdminToolsPage() {
   const [statusMessage, setStatusMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: toolsData, error } = useSWR('/api/tools', fetcher, {
-    revalidateOnFocus: false,
-  });
+  const { data: toolsData, error } = useSWR('/api/tools', fetcher);
   const { data: categoriesData } = useSWR('/api/categories', fetcher);
 
   const tools: Tool[] = toolsData?.data || [];
@@ -127,7 +125,7 @@ export default function AdminToolsPage() {
     }
 
     // Revalidate the tools list
-    mutate('/api/tools');
+    mutate('/api/tools', undefined, { revalidate: true });
   };
 
   const handleDelete = async (id: string) => {
@@ -140,7 +138,7 @@ export default function AdminToolsPage() {
     }
 
     // Revalidate the tools list
-    mutate('/api/tools');
+    mutate('/api/tools', undefined, { revalidate: true });
   };
 
   const handleEdit = (tool: Tool) => {
@@ -187,7 +185,8 @@ export default function AdminToolsPage() {
         });
         setMetadataStatus('idle');
         setStatusMessage('');
-        mutate('/api/tools');
+        // Force revalidate to show the new tool immediately
+        mutate('/api/tools', undefined, { revalidate: true });
       } else {
         alert(data.error || '添加失败，请重试');
       }
@@ -232,7 +231,7 @@ export default function AdminToolsPage() {
     if (response.ok) {
       setShowEditModal(false);
       setEditingTool(null);
-      mutate('/api/tools');
+      mutate('/api/tools', undefined, { revalidate: true });
     } else {
       alert('更新失败');
     }
@@ -251,7 +250,7 @@ export default function AdminToolsPage() {
     if (response.ok) {
       setNewCategoryName('');
       setShowCategoryModal(false);
-      mutate('/api/categories');
+      mutate('/api/categories', undefined, { revalidate: true });
     } else {
       const data = await response.json();
       alert(data.error || '创建失败');
@@ -271,8 +270,8 @@ export default function AdminToolsPage() {
 
     if (response.ok) {
       setEditingCategory(null);
-      mutate('/api/categories');
-      mutate('/api/tools'); // Revalidate tools to update category names
+      mutate('/api/categories', undefined, { revalidate: true });
+      mutate('/api/tools', undefined, { revalidate: true }); // Revalidate tools to update category names
     } else {
       alert('更新失败');
     }
@@ -290,7 +289,7 @@ export default function AdminToolsPage() {
     const data = await response.json();
 
     if (response.ok) {
-      mutate('/api/categories');
+      mutate('/api/categories', undefined, { revalidate: true });
     } else {
       alert(data.error || '删除失败');
     }
@@ -308,7 +307,7 @@ export default function AdminToolsPage() {
     }
 
     // Revalidate the categories list
-    mutate('/api/categories');
+    mutate('/api/categories', undefined, { revalidate: true });
   };
 
   const openCategoryModal = () => {
