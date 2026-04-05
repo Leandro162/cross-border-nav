@@ -23,7 +23,7 @@ export default function ToolGrid({ tools }: ToolGridProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
     >
       {tools.map((tool) => (
         <ToolCard key={tool.id} tool={tool} />

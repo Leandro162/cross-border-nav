@@ -34,55 +34,55 @@ export default function ToolCard({ tool }: ToolCardProps) {
         href={tool.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="group block rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-200 hover:border-blue-200 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900"
+        className="group block h-full rounded-2xl border border-zinc-200 bg-white p-5 transition-all duration-200 hover:border-blue-200 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-900"
       >
-        <div className="flex items-start gap-4">
-          {/* Logo */}
-          <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
-            {logoSrc ? (
-              <Image
-                src={logoSrc}
-                alt={tool.name}
-                fill
-                className="object-cover"
-                unoptimized
-                onError={(e) => {
-                  // Fallback to initial if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'flex h-full w-full items-center justify-center text-2xl font-bold text-zinc-400';
-                    fallback.textContent = tool.name.charAt(0).toUpperCase();
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-zinc-400">
-                {tool.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex min-w-0 flex-1 flex-col">
-            <h3 className="text-lg font-semibold text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">
+        <div className="flex h-full flex-col">
+          {/* Logo and Name */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+              {logoSrc ? (
+                <Image
+                  src={logoSrc}
+                  alt={tool.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                  onError={(e) => {
+                    // Fallback to initial if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'flex h-full w-full items-center justify-center text-xl font-bold text-zinc-400';
+                      fallback.textContent = tool.name.charAt(0).toUpperCase();
+                      parent.appendChild(fallback);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl font-bold text-zinc-400">
+                  {tool.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <h3 className="text-base font-semibold text-zinc-900 group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400 line-clamp-1">
               {tool.name}
             </h3>
-            <p className="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
-              {tool.description}
-            </p>
-
-            {/* Deal Badge */}
-            {tool.has_deal && (
-              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                {tool.deal_count ? `${tool.deal_count} ` : ''}deal
-                {tool.deal_count !== 1 ? 's' : ''}
-              </span>
-            )}
           </div>
+
+          {/* Description */}
+          <p className="mb-3 flex-1 text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3">
+            {tool.description}
+          </p>
+
+          {/* Deal Badge */}
+          {tool.has_deal && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              {tool.deal_count ? `${tool.deal_count} ` : ''}deal
+              {tool.deal_count !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
       </Link>
     </motion.div>
