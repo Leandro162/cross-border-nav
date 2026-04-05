@@ -124,11 +124,18 @@ export async function fetchMetadata(url: string): Promise<MetadataResponse> {
       }
     }
 
+    // If no logo found, use third-party favicon service as fallback
+    if (!logo) {
+      const domain = validUrl.host;
+      // Use Google's favicon service as reliable fallback
+      logo = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    }
+
     return {
       title: title || undefined,
       description: description || undefined,
       image: image || undefined,
-      logo: logo || undefined,
+      logo: logo || `https://www.google.com/s2/favicons?domain=${validUrl.host}&sz=128`,
       url: url,
     };
   } catch (error) {
@@ -152,12 +159,39 @@ function decodeHtml(text: string): string {
   return text.replace(/&[a-z]+;|&#\d+;/gi, (entity) => entities[entity] || entity);
 }
 
-// Fallback to get favicon/logo
+// Fallback to get favicon/logo using multiple services
 export function getFaviconUrl(url: string): string {
   try {
     const urlObj = new URL(url);
-    return `${urlObj.protocol}//${urlObj.host}/favicon.ico`;
+    const domain = urlObj.host;
+
+    // Try multiple favicon services in order of reliability
+    const services = [
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      `https://favicon.yandex.net/favicon/${domain}`,
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+      `${urlObj.protocol}//${domain}/favicon.ico`,
+    ];
+
+    return services[0]; // Return first service as default
   } catch {
     return '';
+  }
+}
+
+// Get fallback favicon URLs for tool display
+export function getFallbackFavicons(url: string): string[] {
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.host;
+
+    return [
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      `https://favicon.yandex.net/favicon/${domain}`,
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+      `${urlObj.protocol}//${domain}/favicon.ico`,
+    ];
+  } catch {
+    return [];
   }
 }

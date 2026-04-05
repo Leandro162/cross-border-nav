@@ -17,6 +17,7 @@ interface NewToolForm {
   description: string;
   categoryId: string;
   hasDeal: boolean;
+  logoUrl?: string;
 }
 
 type TabType = 'tools' | 'categories';
@@ -35,6 +36,7 @@ export default function AdminToolsPage() {
     description: '',
     categoryId: '',
     hasDeal: false,
+    logoUrl: '',
   });
   const [fetchingMetadata, setFetchingMetadata] = useState(false);
   const [metadataStatus, setMetadataStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -166,6 +168,7 @@ export default function AdminToolsPage() {
           url: newTool.url,
           categoryId: newTool.categoryId,
           hasDeal: newTool.hasDeal,
+          logoUrl: newTool.logoUrl,
         }),
       });
 
@@ -180,6 +183,7 @@ export default function AdminToolsPage() {
           description: '',
           categoryId: '',
           hasDeal: false,
+          logoUrl: '',
         });
         setMetadataStatus('idle');
         setStatusMessage('');
@@ -201,6 +205,7 @@ export default function AdminToolsPage() {
       description: '',
       categoryId: '',
       hasDeal: false,
+      logoUrl: '',
     });
     setMetadataStatus('idle');
     setStatusMessage('');
@@ -602,6 +607,22 @@ export default function AdminToolsPage() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Logo 链接（可选）
+                </label>
+                <input
+                  type="url"
+                  value={newTool.logoUrl}
+                  onChange={(e) => setNewTool({ ...newTool, logoUrl: e.target.value })}
+                  className="w-full h-11 rounded-lg border border-zinc-200 bg-white px-4 text-base text-zinc-900 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-100"
+                  placeholder="https://example.com/logo.png"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  留空将使用网站默认图标
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   分类 *
                 </label>
                 <select
@@ -646,6 +667,7 @@ export default function AdminToolsPage() {
                       description: '',
                       categoryId: '',
                       hasDeal: false,
+                      logoUrl: '',
                     });
                     setMetadataStatus('idle');
                     setStatusMessage('');

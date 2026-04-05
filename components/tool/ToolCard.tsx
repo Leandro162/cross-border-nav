@@ -10,7 +10,19 @@ interface ToolCardProps {
   tool: Tool;
 }
 
+function getFaviconFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.host;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  } catch {
+    return '';
+  }
+}
+
 export default function ToolCard({ tool }: ToolCardProps) {
+  const logoSrc = tool.logo_url || getFaviconFromUrl(tool.url);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -27,13 +39,25 @@ export default function ToolCard({ tool }: ToolCardProps) {
         <div className="flex items-start gap-4">
           {/* Logo */}
           <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
-            {tool.logo_url ? (
+            {logoSrc ? (
               <Image
-                src={tool.logo_url}
+                src={logoSrc}
                 alt={tool.name}
                 fill
                 className="object-cover"
                 unoptimized
+                onError={(e) => {
+                  // Fallback to initial if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'flex h-full w-full items-center justify-center text-2xl font-bold text-zinc-400';
+                    fallback.textContent = tool.name.charAt(0).toUpperCase();
+                    parent.appendChild(fallback);
+                  }
+                }}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-zinc-400">
