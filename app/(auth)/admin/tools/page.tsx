@@ -225,6 +225,7 @@ export default function AdminToolsPage() {
         description: editingTool.description,
         url: editingTool.url,
         hasDeal: editingTool.has_deal,
+        logoUrl: editingTool.logo_url,
       }),
     });
 
@@ -472,6 +473,92 @@ export default function AdminToolsPage() {
                   className="w-full h-11 rounded-lg border border-zinc-200 bg-white px-4 text-base text-zinc-900 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-100"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Logo 图片
+                </label>
+                <div className="space-y-3">
+                  {/* Current Logo Preview */}
+                  {editingTool.logo_url && (
+                    <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-800">
+                      <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white dark:bg-zinc-900">
+                        <img
+                          src={editingTool.logo_url}
+                          alt={editingTool.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = `https://www.google.com/s2/favicons?domain=${new URL(editingTool.url).host}&sz=128`;
+                          }}
+                        />
+                      </div>
+                      <div className="flex min-w-0 flex-1">
+                        <p className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+                          {editingTool.logo_url}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingTool({ ...editingTool, logo_url: '' })}
+                        className="flex-shrink-0 rounded p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Logo URL Input */}
+                  <div>
+                    <input
+                      type="url"
+                      value={editingTool.logo_url || ''}
+                      onChange={(e) =>
+                        setEditingTool({ ...editingTool, logo_url: e.target.value })
+                      }
+                      className="w-full h-11 rounded-lg border border-zinc-200 bg-white px-4 text-sm text-zinc-900 placeholder-zinc-400 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      placeholder="输入图片 URL 或上传图片"
+                    />
+                  </div>
+
+                  {/* Upload Button */}
+                  <div>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      上传图片
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          // Check file size (max 2MB)
+                          if (file.size > 2 * 1024 * 1024) {
+                            alert('图片大小不能超过 2MB，请使用图片 URL 方式');
+                            return;
+                          }
+
+                          // Convert to base64
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64 = reader.result as string;
+                            setEditingTool({ ...editingTool, logo_url: base64 });
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      支持 JPG、PNG、GIF 格式，最大 2MB
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">

@@ -11,16 +11,27 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // Build update object only with provided fields
+    const updateData: any = {
+      name: body.name,
+      description: body.description,
+      url: body.url,
+      has_deal: body.hasDeal,
+    };
+
+    // Only update logo_url if explicitly provided (not undefined or empty string)
+    if (body.logoUrl !== undefined && body.logoUrl !== '') {
+      updateData.logo_url = body.logoUrl;
+    }
+
+    // Handle deal_count separately
+    if (body.dealCount !== undefined) {
+      updateData.deal_count = body.dealCount;
+    }
+
     const { data: tool, error } = await supabase
       .from('tools')
-      .update({
-        name: body.name,
-        description: body.description,
-        url: body.url,
-        logo_url: body.logoUrl,
-        has_deal: body.hasDeal,
-        deal_count: body.dealCount,
-      })
+      .update(updateData)
       .eq('id', id)
       .select('*, categories(*)')
       .single();
