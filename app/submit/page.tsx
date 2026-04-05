@@ -23,36 +23,64 @@ export default function SubmitPage() {
   });
   const [loading, setLoading] = useState(false);
   const [fetchingMetadata, setFetchingMetadata] = useState(false);
+  const [metadataStatus, setMetadataStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const { data: categoriesData } = useSWR('/api/categories', fetcher);
   const categories: Category[] = categoriesData?.data || [];
 
   // Fetch metadata when URL changes
+  const fetchMetadata = async () => {
+    if (formData.url && isValidUrl(formData.url)) {
+      try {
+        setFetchingMetadata(true);
+        setMetadataStatus('idle');
+        setStatusMessage('正在获取网站信息...');
+
+        const response = await fetch('/api/metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: formData.url }),
+        });
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          const updates: Partial<typeof formData> = {};
+          if (data.data.title && !formData.name) {
+            updates.name = data.data.title;
+          }
+          if (data.data.description) {
+            updates.description = data.data.description;
+          }
+          if (Object.keys(updates).length > 0) {
+            setFormData((prev) => ({ ...prev, ...updates }));
+            setMetadataStatus('success');
+            setStatusMessage('✓ 已自动获取网站信息');
+          } else {
+            setMetadataStatus('error');
+            setStatusMessage('未能获取到网站信息，请手动填写');
+          }
+        } else {
+          setMetadataStatus('error');
+          setStatusMessage(data.error || '获取网站信息失败');
+        }
+      } catch (error) {
+        console.error('Failed to fetch metadata:', error);
+        setMetadataStatus('error');
+        setStatusMessage('获取网站信息失败，请检查链接是否正确');
+      } finally {
+        setFetchingMetadata(false);
+      }
+    }
+  };
+
+  // Auto-fetch metadata when URL changes (with debounce)
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (formData.url && isValidUrl(formData.url) && !formData.description) {
-        try {
-          setFetchingMetadata(true);
-          const response = await fetch('/api/metadata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: formData.url }),
-          });
-          const data = await response.json();
-          if (data.success && data.data) {
-            setFormData((prev) => ({
-              ...prev,
-              name: data.data.title || prev.name,
-              description: data.data.description || prev.description,
-            }));
-          }
-        } catch (error) {
-          console.error('Failed to fetch metadata:', error);
-        } finally {
-          setFetchingMetadata(false);
-        }
+      if (formData.url && isValidUrl(formData.url) && !formData.name && !formData.description) {
+        await fetchMetadata();
       }
-    }, 800);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [formData.url]);
@@ -132,16 +160,41 @@ export default function SubmitPage() {
             required
           />
 
-          <Input
-            label="工具链接 *"
-            value={formData.url}
-            onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-            placeholder="https://example.com"
-            required
-          />
-          {fetchingMetadata && (
-            <p className="text-sm text-blue-600">正在获取网页信息...</p>
-          )}
+          <div>
+            <Input
+              label="工具链接 *"
+              value={formData.url}
+              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+              placeholder="https://example.com"
+              required
+            />
+            <div className="mt-2 flex items-center justify-between">
+              {fetchingMetadata && (
+                <p className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
+                  正在获取网站信息...
+                </p>
+              )}
+              {!fetchingMetadata && metadataStatus === 'success' && (
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  {statusMessage}
+                </p>
+              )}
+              {!fetchingMetadata && metadataStatus === 'error' && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {statusMessage}
+                </p>
+              )}
+              {!fetchingMetadata && formData.url && isValidUrl(formData.url) && (
+                <button
+                  type="button"
+                  onClick={fetchMetadata}
+                  className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  重新获取
+                </button>
+              )}
+            </div>
+          </div>
 
           <Textarea
             label="工具描述 *"
