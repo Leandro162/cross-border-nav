@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import useSWR, { mutate } from 'swr';
 import Header from '@/components/layout/Header';
 import ToolList from '@/components/admin/ToolList';
+import CategoryList from '@/components/admin/CategoryList';
+import AdminAuth from '@/components/admin/AdminAuth';
 import { Tool } from '@/types/tool';
 import { Category } from '@/types/category';
 
@@ -288,6 +290,21 @@ export default function AdminToolsPage() {
     }
   };
 
+  const handleReorderCategories = async (items: { id: string; order: number }[]) => {
+    const response = await fetch('/api/reorder-categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to reorder categories');
+    }
+
+    // Revalidate the categories list
+    mutate('/api/categories');
+  };
+
   const openCategoryModal = () => {
     setNewCategoryName('');
     setShowCategoryModal(true);
@@ -295,20 +312,23 @@ export default function AdminToolsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-8 dark:bg-zinc-950">
-        <Header />
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-red-600">加载失败，请刷新页面重试</p>
+      <AdminAuth>
+        <div className="min-h-screen bg-zinc-50 p-8 dark:bg-zinc-950">
+          <Header />
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-red-600">加载失败，请刷新页面重试</p>
+          </div>
         </div>
-      </div>
+      </AdminAuth>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <Header />
+    <AdminAuth>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+        <Header />
 
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 pt-20">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             管理后台
@@ -387,47 +407,12 @@ export default function AdminToolsPage() {
               </button>
             </div>
 
-            <div className="space-y-2">
-              {categories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-                      {category.name}
-                    </span>
-                    <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                      {category.slug}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setEditingCategory(category)}
-                      className="rounded p-2 text-zinc-400 hover:bg-zinc-100 hover:text-blue-600 dark:hover:bg-zinc-800 dark:hover:text-blue-400"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id, category.name)}
-                      className="rounded p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800 dark:hover:text-red-400"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {categories.length === 0 && (
-              <div className="py-12 text-center">
-                <p className="text-zinc-500 dark:text-zinc-400">暂无分类</p>
-              </div>
-            )}
+            <CategoryList
+              categories={categories}
+              onReorder={handleReorderCategories}
+              onDelete={handleDeleteCategory}
+              onEdit={setEditingCategory}
+            />
           </>
         )}
       </main>
@@ -752,6 +737,7 @@ export default function AdminToolsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AdminAuth>
   );
 }
