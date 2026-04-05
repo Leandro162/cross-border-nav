@@ -11,12 +11,48 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // Get current category to check if name is changing
+    const { data: currentCategory } = await supabase
+      .from('categories')
+      .select('name,slug')
+      .eq('id', id)
+      .single();
+
+    if (!currentCategory) {
+      return NextResponse.json<ApiResponse<any>>(
+        { success: false, error: 'Category not found' },
+        { status: 404 }
+      );
+    }
+
     // Generate slug from name if name is being updated and slug is not provided
-    if (body.name && !body.slug) {
-      body.slug = body.name
+    let slug = body.slug;
+    if (body.name && !slug && body.name !== currentCategory.name) {
+      slug = body.name
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
+        .trim()
+        .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
         .replace(/(^-|-$)/g, '');
+    }
+
+    // If slug is changing or being generated, ensure uniqueness
+    if (slug && slug !== currentCategory.slug) {
+      let uniqueSlug = slug;
+      let counter = 1;
+      while (true) {
+        const { data: existing } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('slug', uniqueSlug)
+          .neq('id', id) // Exclude current category
+          .single();
+
+        if (!existing) break;
+
+        uniqueSlug = `${slug}-${counter}`;
+        counter++;
+      }
+      body.slug = uniqueSlug;
     }
 
     const { data: category, error } = await supabase

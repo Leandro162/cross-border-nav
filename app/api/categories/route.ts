@@ -31,11 +31,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Generate slug from name if not provided
-    if (!body.slug) {
-      body.slug = body.name
+    let slug = body.slug;
+    if (!slug) {
+      slug = body.name
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
+        .trim()
+        .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
         .replace(/(^-|-$)/g, '');
+    }
+
+    // Check if slug already exists and make it unique
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (true) {
+      const { data: existing } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', uniqueSlug)
+        .single();
+
+      if (!existing) break;
+
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
     }
 
     // Get the current max order
@@ -51,7 +69,7 @@ export async function POST(request: NextRequest) {
       .from('categories')
       .insert({
         name: body.name,
-        slug: body.slug,
+        slug: uniqueSlug,
         order_num: body.order ?? nextOrder,
       })
       .select()
